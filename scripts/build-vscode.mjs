@@ -14,7 +14,7 @@ const skip = (src) => !/[\\/](__pycache__|\.DS_Store)$/.test(src);
 fs.rmSync(PAYLOAD, { recursive: true, force: true });
 fs.cpSync(path.join(ROOT, '.claude'), path.join(PAYLOAD, 'claude'), { recursive: true, filter: skip });
 fs.cpSync(path.join(ROOT, 'lib'), path.join(PAYLOAD, 'lib'), { recursive: true, filter: skip });
-fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(EXT, 'LICENSE'));
+if (fs.existsSync(path.join(ROOT, 'LICENSE'))) fs.copyFileSync(path.join(ROOT, 'LICENSE'), path.join(EXT, 'LICENSE'));
 
 const root = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 const extPkgFile = path.join(EXT, 'package.json');

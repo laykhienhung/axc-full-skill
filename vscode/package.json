@@ -2,7 +2,7 @@
   "name": "axc-full-skill",
   "displayName": "AXC Full Skill for Claude Code",
   "description": "Install the ProtoFlow → DevSpec → TestForge Claude Code skills into your workspace with one command",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "laykhienhung",
   "license": "MIT",
   "engines": {

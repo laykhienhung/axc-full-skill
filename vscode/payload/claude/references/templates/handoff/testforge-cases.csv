@@ -1,3 +1,0 @@
-TC ID,Area,Test Scenario,Pre-condition,Test Steps,Test Data,Expected Result,Type,Priority,Tags
-AC-001,<feature-id> / SCR-001,<AC title>,<Given …>,"1. <When step>
-2. <next step>",-,<Then …>,Positive,High,REQ-001 [req-1] AC-001 BR-002
