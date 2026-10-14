@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtoFlow Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- ponytail: Mermaid loaded from CDN for ERD/flow diagrams — needs internet when the
+     file opens. Offline, diagrams show their source text. Vendor mermaid.min.js if offline matters. -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --paper:#f3f3f1; --surface:#ffffff; --surface2:#f8f8f6; --ink:#17181a; --muted:#6b6e74;
+    --line:#e3e3e0; --line2:#ededea; --accent:#26282c; --accent-soft:#eceae5; --link:#2f5d99;
+    --ok:#1f7a45; --warn:#b26a00; --bad:#c23a35;
+    --t-fact:#1f7a45; --t-inference:#2f5d99; --t-assumption:#b26a00;
+    --t-unknown:#7a45c4; --t-decision:#0d7d86; --t-conflict:#c23a35;
+    --sans:'IBM Plex Sans',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#0f1114; --surface:#16181c; --surface2:#1b1e23; --ink:#e6e7ea; --muted:#8b9098;
+      --line:#262a30; --line2:#1f2329; --accent:#e6e7ea; --accent-soft:#20242b; --link:#7aa7e0;
+      --ok:#4bbd77; --warn:#e0a63a; --bad:#e86b66;
+      --t-fact:#4bbd77; --t-inference:#7aa7e0; --t-assumption:#e0a63a;
+      --t-unknown:#b389ee; --t-decision:#3ec7d1; --t-conflict:#e86b66;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1114; --surface:#16181c; --surface2:#1b1e23; --ink:#e6e7ea; --muted:#8b9098;
+    --line:#262a30; --line2:#1f2329; --accent:#e6e7ea; --accent-soft:#20242b; --link:#7aa7e0;
+    --ok:#4bbd77; --warn:#e0a63a; --bad:#e86b66;
+    --t-fact:#4bbd77; --t-inference:#7aa7e0; --t-assumption:#e0a63a;
+    --t-unknown:#b389ee; --t-decision:#3ec7d1; --t-conflict:#e86b66;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55}
+  a{color:var(--link);text-decoration:none}
+  .mono{font-family:var(--mono)}
+
+  header.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);
+    padding:0 20px;height:52px;display:flex;gap:16px;align-items:center}
+  .wordmark{font-weight:700;letter-spacing:-.01em;font-size:15px}
+  .wordmark small{font:500 12px/1 var(--mono);color:var(--muted);margin-left:8px}
+  .grow{flex:1}
+  #search{background:var(--surface2);border:1px solid var(--line);color:var(--ink);font-family:var(--mono);
+    padding:7px 11px;border-radius:6px;min-width:210px;outline:none;font-size:12px}
+  #search:focus{border-color:var(--accent)}
+  .tbtn{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;
+    padding:6px 11px;cursor:pointer;font:500 12px var(--mono)}
+  .tbtn:hover{color:var(--ink);border-color:var(--accent)}
+
+  .health{display:flex;gap:18px;align-items:center}
+  .stat-h{display:flex;gap:7px;align-items:baseline;font-size:12px;color:var(--muted)}
+  .stat-h b{font-family:var(--mono);font-size:14px;color:var(--ink)}
+  .stat-h.bad b{color:var(--bad)} .stat-h.warn b{color:var(--warn)} .stat-h.ok b{color:var(--ok)}
+
+  .layout{display:grid;grid-template-columns:248px 1fr;min-height:calc(100vh - 52px)}
+  @media (max-width:840px){.layout{grid-template-columns:1fr}}
+  aside{border-right:1px solid var(--line);background:var(--surface);padding:14px 0}
+  @media (max-width:840px){aside{border-right:none;border-bottom:1px solid var(--line)}}
+  .eyebrow{font:600 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.14em;color:var(--muted);
+    padding:0 18px;margin:16px 0 8px}
+  .eyebrow:first-child{margin-top:2px}
+  .navitem{width:100%;text-align:left;background:none;border:0;border-left:2px solid transparent;color:var(--ink);
+    padding:7px 18px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;font-family:var(--sans)}
+  .navitem:hover{background:var(--surface2)}
+  .navitem.active{border-left-color:var(--accent);background:var(--surface2);font-weight:600}
+  .navitem .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .navitem .c{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .navitem .c.bad{color:var(--bad)}
+
+  main{padding:26px 30px;max-width:940px}
+  h1{font-size:23px;font-weight:600;letter-spacing:-.02em;margin:0 0 3px;text-wrap:balance}
+  .sub{color:var(--muted);margin:0 0 22px;font-size:13px}
+  h2{font:600 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+    margin:30px 0 12px;display:flex;align-items:center;gap:10px}
+  h2 .rule{flex:1;height:1px;background:var(--line)}
+  h2 .n{color:var(--ink)}
+
+  /* dots + labels for status / type / gate */
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .stat{display:inline-flex;gap:7px;align-items:center;font-size:12px;white-space:nowrap}
+  .s-grounded{color:var(--muted)} .s-explored{color:var(--link)} .s-specced{color:var(--ink)}
+  .s-prototyped{color:var(--t-decision)} .s-confirmed{color:var(--ok)} .s-handed-off{color:var(--ok)}
+  .s-grounded .dot{background:var(--muted)} .s-explored .dot{background:var(--link)}
+  .s-specced .dot{background:var(--ink)} .s-prototyped .dot{background:var(--t-decision)}
+  .s-confirmed .dot{background:var(--ok)} .s-handed-off .dot{background:var(--ok)}
+  .gatechip{font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:3px 8px;border-radius:4px;white-space:nowrap}
+  .gatechip.ready{color:var(--ok);background:color-mix(in srgb,var(--ok) 16%,transparent)}
+  .gatechip.blocked{color:var(--bad);background:color-mix(in srgb,var(--bad) 16%,transparent)}
+  .gatechip.na{color:var(--muted);background:var(--surface2)}
+  /* item status — the verify signal */
+  .ist{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.03em;display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
+  .ist-confirmed{color:var(--ok)} .ist-proposed{color:var(--warn)} .ist-rejected{color:var(--muted);text-decoration:line-through}
+  .ty{font:600 10px/1.4 var(--mono);letter-spacing:.03em;padding:2px 6px;border-radius:3px;color:#fff}
+  .ty-FACT{background:var(--t-fact)} .ty-INFERENCE{background:var(--t-inference)}
+  .ty-ASSUMPTION{background:var(--t-assumption)} .ty-UNKNOWN{background:var(--t-unknown)}
+  .ty-DECISION{background:var(--t-decision)} .ty-CONFLICT{background:var(--t-conflict)}
+
+  /* registry table */
+  .reg{width:100%;border-collapse:collapse;border:1px solid var(--line);font-size:13px}
+  .reg th,.reg td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:middle}
+  .reg th{font:600 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+    background:var(--surface2)}
+  .reg th.num,.reg td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .reg tr.modrow td{background:var(--surface2);font:600 10px var(--mono);text-transform:uppercase;
+    letter-spacing:.12em;color:var(--muted)}
+  .reg tr.feat{cursor:pointer}
+  .reg tr.feat:hover td{background:var(--surface2)}
+  .reg td.fname{font-weight:600}
+  .reg td.fname .prov{font:400 11px/1.3 var(--sans);color:var(--muted);margin-top:2px}
+  .reg td.num.bad{color:var(--bad)} .reg td.num.warn{color:var(--warn)}
+  .reg td.num.ok{color:var(--ok)} .reg td.num.zero{color:var(--muted)}
+
+  /* progress + module sections */
+  .pbar{height:5px;background:var(--line2);border-radius:99px;overflow:hidden;flex:1;min-width:50px;max-width:170px}
+  .pbar i{display:block;height:100%;background:var(--ok);border-radius:99px}
+  .frac{font:600 11px var(--mono);color:var(--muted);white-space:nowrap}
+  .modsec{margin-bottom:22px}
+  .modsec-head{display:flex;align-items:center;gap:12px;margin:26px 0 10px}
+  .modsec-head .nm{font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--ink)}
+  /* sidebar module buttons */
+  .modbtn{width:100%;text-align:left;background:none;border:0;border-left:2px solid transparent;color:var(--ink);
+    padding:9px 18px;cursor:pointer;font-family:var(--sans)}
+  .modbtn:hover{background:var(--surface2)}
+  .modbtn.active{border-left-color:var(--accent);background:var(--surface2)}
+  .modbtn .mtop{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;margin-bottom:6px}
+  .modbtn .mtop .f{font:500 11px var(--mono);color:var(--muted)}
+  /* open-page link card */
+  .opencard{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line);
+    border-radius:8px;padding:14px 16px;cursor:pointer;background:var(--surface);transition:border-color .12s}
+  .opencard:hover{border-color:var(--accent)}
+  .opencard .go{font:600 12px var(--mono);color:var(--accent)}
+  /* expandable requirement detail row */
+  .reg tr.detrow>td{background:var(--surface2);padding:0}
+  .detbox{padding:12px 16px}
+  .reg tr.feat.open td{background:var(--surface2)}
+
+  /* project context */
+  .ctx{font-size:14px;line-height:1.65;max-width:72ch;margin:0 0 4px;color:var(--ink)}
+  /* zoomable / pannable diagram stage */
+  .zstage{position:relative;height:440px;overflow:hidden;border:1px solid var(--line);border-radius:8px;
+    background:var(--surface);cursor:grab;touch-action:none}
+  .zstage:active{cursor:grabbing}
+  .zlayer{position:absolute;top:0;left:0;transform-origin:0 0;padding:16px;will-change:transform}
+  .zlayer .mermaid{justify-content:flex-start}
+  .ztools{position:absolute;top:8px;right:8px;display:flex;gap:4px;z-index:2}
+  .ztools button{width:30px;height:30px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:6px;cursor:pointer;font:600 15px var(--mono);line-height:1;display:flex;align-items:center;justify-content:center}
+  .ztools button:hover{border-color:var(--accent)}
+  .zhint{position:absolute;bottom:6px;left:10px;font:500 10px var(--mono);color:var(--muted);pointer-events:none}
+
+  /* legend — decode the color/status vocabulary */
+  .legend{display:flex;gap:18px;flex-wrap:wrap;align-items:center;border:1px solid var(--line);
+    border-radius:8px;padding:10px 14px;margin-bottom:4px;background:var(--surface);font-size:12px}
+  .legend .grp{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .legend .lb{font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+  .legend .sw{display:inline-flex;gap:5px;align-items:center;color:var(--muted)}
+  .legend .sw i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+  /* items — bordered rows with a left type-stripe so type/attention scans at a glance */
+  details.item{border:1px solid var(--line);border-left:3px solid var(--stripe,var(--muted));
+    border-radius:6px;margin-bottom:6px;background:var(--surface)}
+  details.item[open]{border-color:var(--stripe,var(--accent))}
+  details.item.k-FACT{--stripe:var(--t-fact)} details.item.k-INFERENCE{--stripe:var(--t-inference)}
+  details.item.k-ASSUMPTION{--stripe:var(--t-assumption)} details.item.k-UNKNOWN{--stripe:var(--t-unknown)}
+  details.item.k-DECISION{--stripe:var(--t-decision)} details.item.k-CONFLICT{--stripe:var(--t-conflict)}
+  details.item>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  details.item>summary::-webkit-details-marker{display:none}
+  details.item>summary:hover{background:var(--surface2)}
+  summary .id{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:70px}
+  summary .ttl{font-weight:500;flex:1;min-width:140px;color:var(--ink)}
+  .body{padding:2px 12px 14px 12px;border-top:1px solid var(--line2);margin-top:2px}
+  .meta{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0 10px}
+  .meta b{color:var(--ink);font-weight:500;font-family:var(--mono)}
+  .text{margin:8px 0;white-space:pre-wrap}
+  .links{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .chip{font:500 11px var(--mono);background:var(--accent-soft);color:var(--ink);border-radius:5px;padding:2px 8px}
+  .empty{color:var(--muted);font-style:italic;padding:6px 2px}
+  .back{background:none;border:0;color:var(--link);cursor:pointer;padding:0;margin-bottom:16px;
+    font:500 12px var(--mono)}
+  .fhead{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 20px;color:var(--muted);font-size:13px}
+  .fhead .modtag{font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.1em;
+    border:1px solid var(--line);border-radius:5px;padding:3px 8px;color:var(--muted)}
+  .blocked-note{border-left:3px solid var(--bad);background:color-mix(in srgb,var(--bad) 8%,transparent);
+    padding:10px 14px;margin:0 0 18px;font-size:13px;color:var(--bad)}
+  .blocked-note b{font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;font-size:11px}
+
+  /* diagrams */
+  .diagram{border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:10px;
+    overflow-x:auto;background:var(--surface)}
+  .diagram .cap{font:500 11px var(--mono);color:var(--muted);margin-bottom:10px}
+  .mermaid{display:flex;justify-content:center;min-height:40px}
+  .mermaid-src{font-family:var(--mono);font-size:12px;white-space:pre;color:var(--muted)}
+
+  /* use case */
+  .uc{border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:8px;background:var(--surface)}
+  .uc h4{margin:0 0 3px;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:baseline}
+  .uc h4 .id{font:500 12px var(--mono);color:var(--muted)}
+  .uc .actor{font-size:12px;color:var(--muted);margin-bottom:6px}
+  .uc .actor b{color:var(--ink)}
+  .uc ol,.uc ul{margin:4px 0 4px 18px;padding:0}
+  .uc .lbl{font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:10px}
+
+  /* db tables */
+  .tablewrap{border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:8px;
+    overflow-x:auto;background:var(--surface)}
+  table.db{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;border:1px solid var(--line)}
+  table.db caption{text-align:left;font:600 13px var(--mono);padding:0 0 8px;color:var(--ink)}
+  table.db caption span{color:var(--muted);font-weight:400}
+  table.db th,table.db td{text-align:left;padding:6px 10px;border:1px solid var(--line)}
+  table.db th{color:var(--muted);font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;background:var(--surface2)}
+  table.db td:first-child{font-family:var(--mono);font-weight:500}
+  .key{font:700 10px var(--mono);padding:1px 5px;border-radius:3px}
+  .key.PK{background:var(--accent-soft);color:var(--ink);border:1px solid var(--line)}
+  .key.FK{background:color-mix(in srgb,var(--link) 14%,transparent);color:var(--link)}
+  .idx{font:500 12px var(--mono);color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     DATA MODEL — generated per engagement.
+     A generator (/protoflow-status or the scaffolder change) replaces
+     the object below with the real compiled model. `module` groups features
+     (dev-side, from _global/architecture.md). Demo data renders standalone.
+     ============================================================ -->
+<script id="model">
+const MODEL = {
+  project: "acme-booking",
+  generated: "2026-09-26",
+  context: "Acme runs resource booking and approval by email and spreadsheet today. This engagement captures that process as a traceable spec and a clickable prototype: a customer books a resource, an approver signs off, and both sides are notified — with no double-booking and a clear audit of who decided what.",
+  modules: [
+    {name:"Booking", description:"Customers reserve resources; approvers authorize them.", dependsOn:[]},
+    {name:"Messaging", description:"Notifications to customers and approvers across the flow.", dependsOn:["Booking"]}
+  ],
+  flowE2E: [
+    {step:"Customer submits a booking", module:"Booking"},
+    {step:"System places a Hold on the slot", module:"Booking"},
+    {step:"Booking enters the approval queue", module:"Booking"},
+    {step:"Approver approves or rejects", module:"Booking"},
+    {step:"Customer is notified of the outcome", module:"Messaging"}
+  ],
+  global: {
+    entities: [
+      {id:"ENT-001", name:"Booking", note:"a customer request for a resource + time slot",
+       fields:[
+         {name:"id",type:"uuid",key:"PK"},{name:"resource_id",type:"uuid",key:"FK"},
+         {name:"approver_id",type:"uuid",key:"FK"},{name:"status",type:"text"},
+         {name:"slot",type:"tstzrange"},{name:"created_at",type:"timestamptz"}
+       ],
+       relations:[{to:"Resource",card:"}o--||",label:"for"},{to:"Approver",card:"}o--o|",label:"approved_by"}]},
+      {id:"ENT-002", name:"Approver", note:"staff role that authorizes a booking",
+       fields:[{name:"id",type:"uuid",key:"PK"},{name:"name",type:"text"},{name:"email",type:"text"}],relations:[]},
+      {id:"ENT-003", name:"Resource", note:"the bookable thing (room, vehicle…)",
+       fields:[{name:"id",type:"uuid",key:"PK"},{name:"name",type:"text"},{name:"capacity",type:"int"}],relations:[]}
+    ],
+    dbDesign: [
+      {table:"bookings", entity:"ENT-001",
+       columns:[
+         {name:"id",type:"uuid",key:"PK"},{name:"resource_id",type:"uuid",key:"FK",note:"→ resources.id"},
+         {name:"approver_id",type:"uuid",key:"FK",note:"nullable until approved"},
+         {name:"status",type:"text",note:"hold | pending | approved | rejected"},
+         {name:"slot",type:"tstzrange",note:"reserved time range"},{name:"created_at",type:"timestamptz"}
+       ],
+       indexes:["EXCLUDE USING gist (resource_id WITH =, slot WITH &&) — no overlap","idx_bookings_status"]},
+      {table:"resources", entity:"ENT-003",
+       columns:[{name:"id",type:"uuid",key:"PK"},{name:"name",type:"text"},{name:"capacity",type:"int"}],indexes:[]},
+      {table:"approvers", entity:"ENT-002",
+       columns:[{name:"id",type:"uuid",key:"PK"},{name:"name",type:"text"},{name:"email",type:"text"}],
+       indexes:["unique idx_approvers_email"]}
+    ],
+    glossary: [
+      {term:"Hold", def:"a provisional booking not yet approved", source:"customer-process.pdf p.4"},
+      {term:"SLA", def:"time budget an approver has to respond", source:"comparable: OpenTable"}
+    ]
+  },
+  features: [
+    {
+      id:"booking-request", title:"Booking request", module:"Booking", status:"specced",
+      provenance:"material: customer-process.pdf", entities:["ENT-001","ENT-003"],
+      useCases:[
+        {id:"UC-001", title:"Submit a booking", actor:"Customer", goal:"reserve a resource for a time slot",
+         pre:["The customer is signed in","At least one resource is free in the window"],
+         main:["Pick resource + slot","System checks for overlap","System creates a Hold","Customer confirms details"],
+         reqs:["REQ-001","REQ-002"]}
+      ],
+      requirements:[
+        {id:"REQ-001", title:"Submit a booking", status:"confirmed", type:"FACT",
+         source:"customer-process.pdf p.6", confirmed:"2026-09-26 by Jane",
+         text:"The system SHALL let a customer submit a booking.\nWHEN a resource and time slot are chosen THEN a Hold is created.", rules:["BR-001"]},
+        {id:"REQ-002", title:"Prevent double-booking", status:"confirmed", type:"INFERENCE",
+         source:"AI-inferred from p.6", confirmed:"",
+         text:"The system SHALL reject a booking whose slot overlaps an existing Hold or approved Booking.", rules:["BR-002"]}
+      ],
+      rules:[
+        {id:"BR-001", title:"Hold expiry", status:"confirmed", type:"DECISION", scope:"local",
+         source:"meeting 2026-09-20", confirmed:"2026-09-20 by Jane", text:"A Hold expires 30 minutes after creation if not approved."},
+        {id:"BR-002", title:"No overlap", status:"proposed", type:"ASSUMPTION", scope:"local",
+         source:"AI-inferred", confirmed:"", text:"Two active bookings may not overlap on the same Resource."}
+      ],
+      flows:[
+        {id:"FLOW-001", title:"Create a booking", status:"confirmed", type:"FACT",
+         source:"customer-process.pdf p.6", confirmed:"",
+         steps:["Customer picks resource + slot","System creates Hold","Customer confirms details","Hold enters approval queue"]}
+      ],
+      screens:[
+        {id:"SCR-001", title:"Booking form", status:"proposed", type:"INFERENCE", source:"AI-inferred", confirmed:"",
+         elements:["Resource picker","Date/time range","Notes field","Submit button"]}
+      ],
+      acceptance:[
+        {id:"AC-001", title:"Hold created on submit", verifies:"REQ-001",
+         gherkin:"Given a free slot\nWhen the customer submits a booking\nThen a Hold is created and shown as pending"}
+      ]
+    },
+    {
+      id:"booking-approval", title:"Booking approval", module:"Booking", status:"specced",
+      provenance:"material: customer-process.pdf + comparable: Calendly", entities:["ENT-001","ENT-002"],
+      useCases:[
+        {id:"UC-002", title:"Approve or reject a booking", actor:"Approver", goal:"decide on a pending booking",
+         pre:["A booking is in the pending queue"],
+         main:["Open the approval queue","Review the booking","Approve — or reject with a reason","Customer is notified"],
+         reqs:["REQ-003"]}
+      ],
+      requirements:[
+        {id:"REQ-003", title:"Approver decision", status:"confirmed", type:"FACT",
+         source:"customer-process.pdf p.12", confirmed:"2026-09-26 by Jane",
+         text:"The system SHALL let an Approver approve or reject a pending booking.\nWHEN rejected THEN the customer SHALL be notified with a reason.", rules:["BR-003"]},
+        {id:"REQ-004", title:"Auto-approve under SLA", status:"proposed", type:"UNKNOWN",
+         source:"open question — raised against REQ-003", confirmed:"",
+         text:"Should a booking auto-approve if the Approver does not respond within the SLA? (blocks REQ-003)", rules:[]}
+      ],
+      rules:[
+        {id:"BR-003", title:"Credit check on approval", status:"proposed", type:"CONFLICT", scope:"local",
+         source:"customer-process.pdf p.12 vs finance-policy.xlsx", confirmed:"",
+         text:"Document A says approval requires a credit check; finance policy says credit check happens at invoicing. Blocks handoff until resolved."}
+      ],
+      flows:[
+        {id:"FLOW-002", title:"Approval decision", status:"proposed", type:"INFERENCE", source:"AI-inferred", confirmed:"",
+         steps:["Approver opens queue","Reviews Hold","Approves or rejects","Customer notified"]}
+      ],
+      screens:[
+        {id:"SCR-002", title:"Approval queue", status:"proposed", type:"INFERENCE", source:"comparable: Calendly admin", confirmed:"",
+         elements:["Pending list","Detail drawer","Approve / Reject actions","Reason field"]}
+      ],
+      acceptance:[
+        {id:"AC-002", title:"Rejection notifies customer", verifies:"REQ-003",
+         gherkin:"Given a pending booking\nWhen the Approver rejects it with a reason\nThen the customer receives the reason"}
+      ]
+    },
+    {
+      id:"notifications", title:"Notifications", module:"Messaging", status:"grounded",
+      provenance:"comparable: OpenTable, Calendly (not in customer materials)",
+      entities:[], useCases:[], requirements:[], rules:[], flows:[], screens:[], acceptance:[]
+    }
+  ]
+};
+</script>
+
+<header class="top">
+  <div class="wordmark">ProtoFlow<small id="projName"></small></div>
+  <div class="grow"></div>
+  <div class="health" id="health"></div>
+  <input id="search" type="search" placeholder="search id · title · text">
+  <button class="tbtn" id="themeBtn">theme</button>
+</header>
+
+<div class="layout">
+  <aside id="rail"></aside>
+  <main id="main"></main>
+</div>
+
+<script>
+const $ = (s,r=document)=>r.querySelector(s);
+const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+const esc = s => (s??"").toString().replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const clean = s => (s??"").toString().replace(/"/g,"'").replace(/[\r\n]+/g," ").trim();
+const DOCS = [["requirements","Requirements"],["rules","Rules"],["flows","Flows"],["screens","Screens"],["acceptance","Acceptance"]];
+let CURRENT={type:"overview"}, ql="";
+
+// ---- stats / gate (mirrors registry.md) ----
+function featureStats(f){
+  const items=[...f.requirements,...f.rules,...f.flows,...f.screens,...f.acceptance];
+  const openQ=items.filter(i=>i.type==="UNKNOWN").length;
+  const conflict=items.filter(i=>i.type==="CONFLICT").length;
+  // counted like /protoflow-status: id'd REQ- items; BR- defined locally (global ones are references)
+  const reqs=f.requirements.filter(r=>r.id);
+  const brs=f.rules.filter(r=>r.id&&r.scope!=="global");
+  const confReqs=reqs.filter(r=>r.status==="confirmed").length;
+  const confIds=reqs.filter(r=>r.status==="confirmed").map(r=>r.id);
+  const unknownOnConfirmed=items.some(i=>i.type==="UNKNOWN"&&confIds.some(id=>(i.text||"").includes(id)));
+  const blocked=conflict>0||unknownOnConfirmed;
+  const specced=["specced","prototyped","confirmed","handed-off"].includes(f.status);
+  const review=items.filter(i=>i.status==="proposed").length; // items awaiting sign-off
+  return {req:reqs.length, br:brs.length, openQ, conflict, confReqs, review, blocked, gate: blocked?"blocked":(specced?"ready":"na")};
+}
+function projectHealth(){let c=0,q=0,cr=0,tr=0;
+  for(const f of MODEL.features){const s=featureStats(f); c+=s.conflict; q+=s.openQ; cr+=s.confReqs; tr+=s.req;}
+  return {conflicts:c, openQuestions:q, confirmedReqs:cr, totalReqs:tr};}
+function byModule(){const map=new Map();
+  for(const f of MODEL.features){const m=f.module||"Ungrouped"; if(!map.has(m))map.set(m,[]); map.get(m).push(f);}
+  return [...map];}
+function isDone(f){const s=featureStats(f); return s.req>0 && s.confReqs===s.req && !s.blocked;}
+function moduleStats(feats){const done=feats.filter(isDone).length, total=feats.length;
+  return {done, total, pct: total?Math.round(done/total*100):0};}
+const cssid=s=>"mod-"+(s||"").toString().toLowerCase().replace(/[^a-z0-9]+/g,"-");
+
+const statusEl=s=>`<span class="stat s-${s}"><i class="dot"></i>${s}</span>`;
+const gateEl=g=>`<span class="gatechip ${g}">${g==='na'?'—':g}</span>`;
+const tag=t=>`<span class="ty ty-${t}">${t}</span>`;
+const IST={confirmed:"✓",proposed:"○",rejected:"✕"};
+const itemStatusEl=s=>`<span class="ist ist-${s}">${IST[s]||"○"} ${s}</span>`;
+const h2=(t,n)=>el("h2",null,`${t}${n!=null?` <span class="n">${n}</span>`:""}<span class="rule"></span>`);
+
+// ---- diagrams ----
+function entName(id){const e=MODEL.global.entities.find(x=>x.id===id); return e?e.name:id;}
+function erdFor(ids){
+  const ents=MODEL.global.entities.filter(e=>!ids||ids.includes(e.id)); if(!ents.length)return null;
+  const names=new Set(ents.map(e=>e.name)); let s="erDiagram\n";
+  for(const e of ents){s+=`  ${e.name} {\n`; for(const f of(e.fields||[]))s+=`    ${f.type} ${f.name}${f.key?" "+f.key:""}\n`; s+="  }\n";}
+  for(const e of ents)for(const r of(e.relations||[]))if(names.has(r.to))s+=`  ${e.name} ${r.card} ${r.to} : "${clean(r.label)}"\n`;
+  return s;
+}
+function flowMermaid(f){const steps=f.steps||[]; if(!steps.length)return null; let s="flowchart TD\n";
+  steps.forEach((st,i)=>{s+=`  n${i}["${clean(st)}"]${i<steps.length-1?" --> n"+(i+1):""}\n`;}); return s;}
+function diagramBlock(src,cap,opts={}){const w=el("div","diagram");
+  if(cap)w.append(el("div","cap",esc(cap)));
+  if(!window.mermaid){w.append(el("div","mermaid-src",esc(src))); return w;}
+  if(opts.zoom){
+    const stage=el("div","zstage"); const layer=el("div","zlayer");
+    const pre=el("pre","mermaid"); pre.textContent=src; layer.append(pre); stage.append(layer);
+    stage.insertAdjacentHTML("beforeend",
+      `<div class="ztools"><button data-z="in" title="Zoom in">+</button><button data-z="out" title="Zoom out">−</button><button data-z="reset" title="Reset">⤢</button></div>
+       <div class="zhint">scroll to zoom · drag to pan</div>`);
+    stage.dataset.zoom="pending"; w.append(stage);
+  } else { const p=el("pre","mermaid"); p.textContent=src; w.append(p); }
+  return w;}
+async function runMermaid(){if(!window.mermaid)return;
+  const nodes=[...$("#main").querySelectorAll(".mermaid:not([data-processed])")];
+  if(nodes.length){try{await mermaid.run({nodes});}catch(e){console.warn("mermaid",e);}}
+  $("#main").querySelectorAll('.zstage[data-zoom="pending"]').forEach(st=>{st.dataset.zoom="on"; makeZoomable(st);});
+}
+function makeZoomable(stage){
+  const layer=stage.querySelector(".zlayer"); const svg=layer&&layer.querySelector("svg"); if(!svg)return;
+  svg.removeAttribute("height"); svg.style.maxWidth="none";
+  let scale=1,tx=8,ty=8,drag=false,sx=0,sy=0;
+  const apply=()=>{layer.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;};
+  const zoomAt=(cx,cy,f)=>{tx=cx-(cx-tx)*f; ty=cy-(cy-ty)*f; scale=Math.max(0.2,Math.min(6,scale*f)); apply();};
+  apply();
+  stage.querySelector('[data-z=in]').onclick=()=>zoomAt(stage.clientWidth/2,stage.clientHeight/2,1.2);
+  stage.querySelector('[data-z=out]').onclick=()=>zoomAt(stage.clientWidth/2,stage.clientHeight/2,1/1.2);
+  stage.querySelector('[data-z=reset]').onclick=()=>{scale=1;tx=8;ty=8;apply();};
+  stage.addEventListener("wheel",e=>{e.preventDefault(); const r=stage.getBoundingClientRect();
+    zoomAt(e.clientX-r.left,e.clientY-r.top, e.deltaY<0?1.1:1/1.1);},{passive:false});
+  stage.addEventListener("mousedown",e=>{if(e.target.closest(".ztools"))return; drag=true; sx=e.clientX-tx; sy=e.clientY-ty;});
+  stage.addEventListener("mousemove",e=>{if(!drag)return; tx=e.clientX-sx; ty=e.clientY-sy; apply();});
+  stage.addEventListener("mouseup",()=>drag=false);
+  stage.addEventListener("mouseleave",()=>drag=false);
+}
+
+function dbTable(t){const w=el("div","tablewrap");
+  const rows=t.columns.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.type)}</td>
+    <td>${c.key?`<span class="key ${c.key}">${c.key}</span>`:""}</td>
+    <td style="color:var(--muted)">${esc(c.note||"")}</td></tr>`).join("");
+  w.innerHTML=`<table class="db"><caption>${esc(t.table)} <span>${esc(t.entity||"")}</span></caption>
+    <thead><tr><th>Column</th><th>Type</th><th>Key</th><th>Note</th></tr></thead><tbody>${rows}</tbody></table>`;
+  if(t.indexes?.length)w.append(el("div","idx","Indexes: "+t.indexes.map(esc).join("   ·   ")));
+  return w;}
+
+function useCaseCard(uc){const c=el("div","uc");
+  c.innerHTML=`<h4><span class="id">${esc(uc.id)}</span> ${esc(uc.title)}</h4>
+    <div class="actor">Actor: <b>${esc(uc.actor)}</b> — ${esc(uc.goal)}</div>
+    ${uc.pre?.length?`<div class="lbl">Preconditions</div><ul>${uc.pre.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:""}
+    ${uc.main?.length?`<div class="lbl">Main flow</div><ol>${uc.main.map(p=>`<li>${esc(p)}</li>`).join("")}</ol>`:""}
+    ${uc.reqs?.length?`<div class="links">${uc.reqs.map(r=>`<span class="chip">${esc(r)}</span>`).join("")}</div>`:""}`;
+  return c;}
+
+function itemCard(kind,i){const d=el("details","item"+(i.type?` k-${i.type}`:""));
+  const links=[];
+  if(i.rules?.length)links.push(...i.rules.map(r=>`<span class="chip">Rules: ${esc(r)}</span>`));
+  if(i.verifies)links.push(`<span class="chip">Verifies: ${esc(i.verifies)}</span>`);
+  if(i.scope)links.push(`<span class="chip">scope: ${esc(i.scope)}</span>`);
+  let extra="";
+  if(i.text)extra+=`<div class="text">${esc(i.text)}</div>`;
+  if(i.gherkin)extra+=`<div class="text">${esc(i.gherkin)}</div>`;
+  if(i.elements)extra+="<ul>"+i.elements.map(s=>`<li>${esc(s)}</li>`).join("")+"</ul>";
+  d.innerHTML=`<summary><span class="id">${esc(i.id)}</span><span class="ttl">${esc(i.title)}</span>
+    ${i.type?tag(i.type):""}${i.status?itemStatusEl(i.status):""}</summary>
+    <div class="body"><div class="meta">
+      ${i.type?`<span>Type <b>${i.type}</b></span>`:""}
+      <span>Source <b>${esc(i.source||"—")}</b></span>
+      <span>Confirmed <b>${esc(i.confirmed||"—")}</b></span>
+    </div>${extra}${links.length?`<div class="links">${links.join("")}</div>`:""}</div>`;
+  if(kind==="flows"){const fm=flowMermaid(i); if(fm)d.querySelector(".body").append(diagramBlock(fm,"Flow diagram"));}
+  return d;}
+
+// ---- shared: feature table ----
+function featureTable(feats){
+  const wrap=el("div"); wrap.style.overflowX="auto";
+  const table=el("table","reg");
+  table.innerHTML=`<thead><tr>
+    <th>Feature</th><th>Status</th><th class="num">Conf/REQ</th><th class="num">BR</th>
+    <th class="num">Review</th><th class="num">Open-Q</th><th class="num">Conflict</th><th>Handoff</th></tr></thead>`;
+  const tb=el("tbody");
+  for(const f of feats){
+    const s=featureStats(f); const tr=el("tr","feat");
+    const confCls=!s.req?"zero":(s.confReqs===s.req?"ok":"warn");
+    tr.innerHTML=`
+      <td class="fname">${esc(f.title)}<div class="prov">${esc(f.provenance||"")}</div></td>
+      <td>${statusEl(f.status)}</td>
+      <td class="num ${confCls}">${s.confReqs}/${s.req}</td>
+      <td class="num ${s.br?'':'zero'}">${s.br}</td>
+      <td class="num ${s.review?'warn':'zero'}">${s.review}</td>
+      <td class="num ${s.openQ?'warn':'zero'}">${s.openQ}</td>
+      <td class="num ${s.conflict?'bad':'zero'}">${s.conflict}</td>
+      <td>${gateEl(s.gate)}</td>`;
+    tr.onclick=()=>renderFeature(f.id); tb.append(tr);
+  }
+  table.append(tb); wrap.append(table); return wrap;
+}
+const legendEl=()=>{const leg=el("div","legend");
+  leg.innerHTML=`
+    <div class="grp"><span class="lb">Type</span>
+      ${["FACT","INFERENCE","ASSUMPTION","UNKNOWN","DECISION","CONFLICT"].map(t=>`<span class="sw"><i style="background:var(--t-${t.toLowerCase()})"></i>${t}</span>`).join("")}</div>
+    <div class="grp"><span class="lb">Verify</span>
+      <span class="sw" style="color:var(--ok)">✓ confirmed</span>
+      <span class="sw" style="color:var(--warn)">○ proposed</span>
+      <span class="sw">✕ rejected</span></div>`;
+  return leg;};
+
+// ---- module page (filtered to one module) ----
+function renderModule(mod){
+  const entry=byModule().find(([m])=>m===mod); const feats=entry?entry[1]:[];
+  const md=(MODEL.modules||[]).find(x=>x.name===mod);
+  CURRENT={type:"module",mod}; markNav("mod:"+mod);
+  const ms=moduleStats(feats); const m=el("div");
+  const back=el("button","back","← Overview"); back.onclick=renderOverview; m.append(back);
+  m.append(el("h1",null,esc(mod)));
+  m.append(el("p","sub",`Module · ${feats.length} feature(s) · ${ms.done}/${ms.total} done`));
+  if(md&&md.description) m.append(el("p","sub",esc(md.description)));
+  m.append(h2("Features",feats.length));
+  m.append(featureTable(feats));
+  // dedicated requirements page
+  const reqCount=feats.reduce((n,f)=>n+f.requirements.length,0);
+  m.append(h2("Requirements",reqCount));
+  const rc=el("div","opencard");
+  rc.innerHTML=`<span>View all ${reqCount} requirement(s) across ${esc(mod)}</span><span class="go">open →</span>`;
+  rc.onclick=()=>renderRequirements(mod);
+  m.append(rc);
+  swap(m); runMermaid();
+}
+
+// ---- dedicated requirements page (per module) ----
+function renderRequirements(mod){
+  const entry=byModule().find(([m])=>m===mod); const feats=entry?entry[1]:[];
+  CURRENT={type:"reqs",mod}; markNav("mod:"+mod);
+  const reqs=feats.flatMap(f=>f.requirements.map(r=>[f,r]));
+  const m=el("div");
+  const back=el("button","back",`← ${esc(mod)}`); back.onclick=()=>renderModule(mod); m.append(back);
+  m.append(el("h1",null,"Requirements"));
+  m.append(el("p","sub",`${esc(mod)} · ${reqs.length} requirement(s) · click a row for detail`));
+  m.append(legendEl());
+  const wrap=el("div"); wrap.style.overflowX="auto";
+  const t=el("table","reg");
+  t.innerHTML=`<thead><tr><th>REQ</th><th>Requirement</th><th>Feature</th><th>Type</th><th>Status</th><th>Rules</th></tr></thead>`;
+  const tb=el("tbody");
+  for(const [f,r] of reqs){
+    const tr=el("tr","feat");
+    tr.innerHTML=`
+      <td class="mono">${esc(r.id)}</td>
+      <td class="fname">${esc(r.title)}</td>
+      <td>${esc(f.title)}</td>
+      <td>${r.type?tag(r.type):""}</td>
+      <td>${r.status?itemStatusEl(r.status):""}</td>
+      <td>${(r.rules||[]).map(x=>`<span class="chip">${esc(x)}</span>`).join(" ")||'<span style="color:var(--muted)">—</span>'}</td>`;
+    const det=el("tr","detrow"); det.hidden=true;
+    const acc=(f.acceptance||[]).filter(a=>a.verifies===r.id);
+    det.innerHTML=`<td colspan="6"><div class="detbox">
+      <div class="text">${esc(r.text||"")}</div>
+      <div class="meta"><span>Source <b>${esc(r.source||"—")}</b></span><span>Confirmed <b>${esc(r.confirmed||"—")}</b></span></div>
+      ${acc.length?`<div class="uc"><div class="lbl">Acceptance</div>`+acc.map(a=>`<div class="text"><b class="mono">${esc(a.id)}</b> — ${esc(a.gherkin||a.title)}</div>`).join("")+`</div>`:""}
+    </div></td>`;
+    tr.onclick=()=>{det.hidden=!det.hidden; tr.classList.toggle("open");};
+    tb.append(tr); tb.append(det);
+  }
+  t.append(tb); wrap.append(t); m.append(wrap);
+  if(!reqs.length)m.append(el("div","empty","none yet"));
+  swap(m); runMermaid();
+}
+
+// ---- module metadata + rollup ----
+function modulesList(){
+  const grp=new Map(byModule()); const seen=new Set(); const out=[];
+  for(const md of (MODEL.modules||[])){ out.push({...md, feats:grp.get(md.name)||[]}); seen.add(md.name); }
+  for(const [name,feats] of grp) if(!seen.has(name)) out.push({name, description:"", dependsOn:[], feats});
+  return out;
+}
+function moduleRollup(feats){
+  let reqs=0,conflict=0,openQ=0; const done=feats.filter(isDone).length;
+  for(const f of feats){const s=featureStats(f); reqs+=s.req; conflict+=s.conflict; openQ+=s.openQ;}
+  const blocked=feats.some(f=>featureStats(f).blocked);
+  const status=blocked?"blocked":(feats.length&&done===feats.length?"ready":"in progress");
+  return {total:feats.length, done, reqs, conflict, openQ, blocked, status, pct:feats.length?Math.round(done/feats.length*100):0};
+}
+const modStat=st=>`<span class="gatechip ${st==='ready'?'ready':st==='blocked'?'blocked':'na'}">${st}</span>`;
+function e2eMermaid(){
+  const steps=MODEL.flowE2E||[]; if(!steps.length)return null;
+  // module lanes via subgraphs (contiguous runs), chained in order
+  let s="flowchart LR\n"; let prev=null, open=false;
+  steps.forEach((st,i)=>{
+    if(st.module!==prev){ if(open)s+="  end\n"; s+=`  subgraph ${JSON.stringify(st.module||"—")}\n`; open=true; prev=st.module; }
+    s+=`    e${i}["${String(i+1).padStart(2,"0")}. ${clean(st.step)}"]\n`;
+  });
+  if(open)s+="  end\n";
+  for(let i=0;i<steps.length-1;i++) s+=`  e${i} --> e${i+1}\n`;
+  return s;
+}
+function acronymsTable(){
+  const gl=MODEL.global.glossary||[]; if(!gl.length)return null;
+  const wrap=el("div"); wrap.style.overflowX="auto";
+  const t=el("table","reg");
+  t.innerHTML=`<thead><tr><th>Term</th><th>Definition</th><th>Source</th></tr></thead>`;
+  const tb=el("tbody");
+  for(const g of gl) tb.innerHTML+=`<tr><td class="fname">${esc(g.term)}</td><td>${esc(g.def)}</td>
+    <td style="color:var(--muted)">${esc(g.source||"—")}</td></tr>`;
+  t.append(tb); wrap.append(t); return wrap;
+}
+
+// ---- overview: backbone (modules only) ----
+function renderOverview(){
+  CURRENT={type:"overview"}; markNav("overview");
+  const list=modulesList();
+  const m=el("div");
+  m.append(el("h1",null,`${esc(MODEL.project)}`));
+  m.append(el("p","sub",`Backbone · ${list.length} modules · ${MODEL.features.length} features · compiled ${esc(MODEL.generated)}`));
+
+  // 1) modules rollup table — first. click a row to drill in.
+  m.append(h2("Modules",list.length));
+  const wrap=el("div"); wrap.style.overflowX="auto";
+  const t=el("table","reg");
+  t.innerHTML=`<thead><tr>
+    <th>Module</th><th>Status</th><th class="num">Features</th><th class="num">Reqs</th>
+    <th class="num">Open-Q</th><th class="num">Conflict</th><th>Progress</th></tr></thead>`;
+  const tb=el("tbody");
+  for(const md of list){
+    const r=moduleRollup(md.feats); const tr=el("tr","feat");
+    tr.innerHTML=`
+      <td class="fname">${esc(md.name)}<div class="prov">${esc(md.description||"")}</div></td>
+      <td>${modStat(r.status)}</td>
+      <td class="num ${r.total?'':'zero'}">${r.total}</td>
+      <td class="num ${r.reqs?'':'zero'}">${r.reqs}</td>
+      <td class="num ${r.openQ?'warn':'zero'}">${r.openQ}</td>
+      <td class="num ${r.conflict?'bad':'zero'}">${r.conflict}</td>
+      <td><div style="display:flex;gap:8px;align-items:center">
+        <div class="pbar"><i style="width:${r.pct}%"></i></div>
+        <span class="frac">${r.done}/${r.total}</span></div></td>`;
+    tr.onclick=()=>renderModule(md.name); tb.append(tr);
+  }
+  t.append(tb); wrap.append(t); m.append(wrap);
+
+  // 2) project context
+  if(MODEL.context){ m.append(h2("Project context")); m.append(el("p","ctx",esc(MODEL.context))); }
+
+  // 3) end-to-end flow — module lanes, zoomable/pannable
+  const flow=e2eMermaid();
+  if(flow){ m.append(h2("End-to-end flow")); m.append(el("p","sub","Steps grouped by owning module. Scroll to zoom, drag to pan.")); m.append(diagramBlock(flow,"Order → delivery, across modules",{zoom:true})); }
+
+  // 4) business terms / acronyms
+  const acr=acronymsTable();
+  if(acr){ m.append(h2("Business terms",(MODEL.global.glossary||[]).length)); m.append(acr); }
+
+  swap(m); runMermaid();
+}
+
+// ---- feature ----
+function renderFeature(id){
+  const f=MODEL.features.find(x=>x.id===id); if(!f)return renderOverview();
+  CURRENT={type:"feature",id}; markNav(id);
+  const s=featureStats(f); const m=el("div");
+  const back=el("button","back","← registry"); back.onclick=renderOverview; m.append(back);
+  m.append(el("h1",null,esc(f.title)));
+  m.append(el("div","fhead",
+    `<span class="modtag">${esc(f.module||"—")}</span>${statusEl(f.status)}
+     <span>handoff ${gateEl(s.gate)}</span><span>${esc(f.provenance||"")}</span>`));
+  if(s.blocked)m.append(el("div","blocked-note",`<b>Blocked</b> — resolve conflicts / open questions on confirmed requirements before handoff.`));
+
+  m.append(h2("Use cases",(f.useCases||[]).length));
+  if((f.useCases||[]).length)for(const uc of f.useCases)m.append(useCaseCard(uc)); else m.append(el("div","empty","none yet"));
+
+  for(const [key,label] of [["requirements","Requirements"],["rules","Rules"],["flows","Flows"]]){
+    const items=f[key]||[]; m.append(h2(label,items.length));
+    if(items.length)for(const i of items)m.append(itemCard(key,i)); else m.append(el("div","empty","none yet"));
+  }
+
+  if(f.entities&&f.entities.length){
+    m.append(h2("Data model"));
+    const erd=erdFor(f.entities);
+    if(erd)m.append(diagramBlock(erd,`Entities: ${f.entities.map(entName).join(", ")}`,{zoom:true}));
+    for(const t of (MODEL.global.dbDesign||[]).filter(t=>f.entities.includes(t.entity)))m.append(dbTable(t));
+  }
+
+  for(const [key,label] of [["screens","Screens"],["acceptance","Acceptance"]]){
+    const items=f[key]||[]; m.append(h2(label,items.length));
+    if(items.length)for(const i of items)m.append(itemCard(key,i)); else m.append(el("div","empty","none yet"));
+  }
+  swap(m); runMermaid();
+}
+
+// ---- search ----
+function renderSearch(q){
+  CURRENT={type:"search",q}; ql=q.toLowerCase();
+  const hits=[];
+  for(const f of MODEL.features)for(const [key] of DOCS)for(const i of (f[key]||[]))
+    if([i.id,i.title,i.text,i.gherkin,i.source].some(v=>(v||"").toLowerCase().includes(ql)))hits.push([f,i,key]);
+  const m=el("div"); m.append(el("h1",null,`Search`)); m.append(el("p","sub",`“${esc(q)}” · ${hits.length} item(s)`));
+  for(const [f,i,key] of hits){const w=el("div");
+    w.append(el("div","prov",`<span class="mono" style="color:var(--muted);font-size:12px">${esc(f.title)} · ${key}</span>`));
+    w.append(itemCard(key,i)); m.append(w);}
+  if(!hits.length)m.append(el("div","empty","no matches"));
+  swap(m); runMermaid();
+}
+
+// ---- shell ----
+function swap(node){const m=$("#main"); m.innerHTML=""; m.append(node); window.scrollTo(0,0);}
+function markNav(id){document.querySelectorAll(".navitem,.modbtn").forEach(n=>n.classList.toggle("active",n.dataset.nav===id));}
+function rerender(){CURRENT.type==="feature"?renderFeature(CURRENT.id):CURRENT.type==="module"?renderModule(CURRENT.mod):CURRENT.type==="reqs"?renderRequirements(CURRENT.mod):CURRENT.type==="search"?renderSearch(CURRENT.q):renderOverview();}
+function buildRail(){
+  const r=$("#rail"); r.innerHTML="";
+  r.append(el("div","eyebrow","Views"));
+  const ov=el("button","navitem"); ov.dataset.nav="overview"; ov.innerHTML=`<span class="nm">Overview</span>`;
+  ov.onclick=renderOverview; r.append(ov);
+  r.append(el("div","eyebrow","Modules"));
+  for(const [mod,feats] of byModule()){
+    const ms=moduleStats(feats);
+    const b=el("button","modbtn"); b.dataset.nav="mod:"+mod;
+    b.innerHTML=`<div class="mtop"><span>${esc(mod)}</span><span class="f">${ms.done}/${ms.total}</span></div>
+      <div class="pbar"><i style="width:${ms.pct}%"></i></div>`;
+    b.onclick=()=>renderModule(mod);
+    r.append(b);
+  }
+}
+function buildHealth(){const h=projectHealth();
+  $("#health").innerHTML=`
+    <span class="stat-h ${h.conflicts?'bad':'ok'}">Conflicts <b>${h.conflicts}</b></span>
+    <span class="stat-h ${h.openQuestions?'warn':'ok'}">Open-Q <b>${h.openQuestions}</b></span>
+    <span class="stat-h">Confirmed <b>${h.confirmedReqs}/${h.totalReqs}</b></span>`;}
+function isDark(){const t=document.documentElement.dataset.theme; return t?t==="dark":matchMedia("(prefers-color-scheme:dark)").matches;}
+function initMermaid(){if(window.mermaid)mermaid.initialize({startOnLoad:false,securityLevel:"loose",
+  theme:isDark()?"dark":"neutral",fontFamily:"IBM Plex Mono, monospace",er:{useMaxWidth:true},flowchart:{useMaxWidth:true}});}
+initMermaid();
+
+(function(){
+  try{const t=localStorage.getItem("pf-theme"); if(t)document.documentElement.dataset.theme=t;}catch(e){}
+  $("#themeBtn").onclick=()=>{
+    const cur=document.documentElement.dataset.theme;
+    const next=cur==="dark"?"light":(cur==="light"?"":"dark");
+    if(next)document.documentElement.dataset.theme=next; else delete document.documentElement.dataset.theme;
+    try{localStorage.setItem("pf-theme",next);}catch(e){}
+    initMermaid(); rerender();
+  };
+})();
+
+$("#projName").textContent=MODEL.project;
+buildHealth(); buildRail();
+let st; $("#search").addEventListener("input",e=>{clearTimeout(st); const q=e.target.value.trim();
+  st=setTimeout(()=> q?renderSearch(q):renderOverview(),120);});
+renderOverview();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "axc-full-skill",
+  "owner": {
+    "name": "laykhienhung"
+  },
+  "description": "ProtoFlow → DevSpec → TestForge skills for Claude Code",
+  "plugins": [
+    {
+      "name": "axc-full-skill",
+      "source": "./plugin",
+      "category": "development",
+      "tags": [
+        "spec-driven",
+        "business-analysis",
+        "playwright",
+        "e2e"
+      ],
+      "version": "0.1.0",
+      "description": "Claude Code skills for the full delivery flow: ProtoFlow (BA discovery) → DevSpec (spec-driven build) → TestForge (Playwright E2E)"
+    }
+  ]
+}

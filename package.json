@@ -1,0 +1,36 @@
+{
+  "name": "axc-full-skill",
+  "version": "0.1.0",
+  "description": "Claude Code skills for the full delivery flow: ProtoFlow (BA discovery) → DevSpec (spec-driven build) → TestForge (Playwright E2E)",
+  "author": {
+    "name": "laykhienhung"
+  },
+  "type": "module",
+  "scripts": {
+    "build:plugin": "node scripts/build-plugin.mjs",
+    "build:vscode": "node scripts/build-vscode.mjs",
+    "build": "npm run build:plugin && npm run build:vscode"
+  },
+  "bin": {
+    "axc-full-skill": "bin/cli.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    ".claude",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude-code",
+    "claude",
+    "skills",
+    "spec-driven",
+    "playwright",
+    "business-analysis"
+  ],
+  "license": "MIT"
+}

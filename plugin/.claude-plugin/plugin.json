@@ -1,0 +1,17 @@
+{
+  "name": "axc-full-skill",
+  "version": "0.1.0",
+  "description": "Claude Code skills for the full delivery flow: ProtoFlow (BA discovery) → DevSpec (spec-driven build) → TestForge (Playwright E2E)",
+  "author": {
+    "name": "laykhienhung"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "skills",
+    "spec-driven",
+    "playwright",
+    "business-analysis"
+  ]
+}

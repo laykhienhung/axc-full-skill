@@ -1,0 +1,43 @@
+{
+  "name": "axc-full-skill",
+  "displayName": "AXC Full Skill for Claude Code",
+  "description": "Install the ProtoFlow → DevSpec → TestForge Claude Code skills into your workspace with one command",
+  "version": "0.1.0",
+  "publisher": "laykhienhung",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "claude",
+    "claude code",
+    "skills",
+    "spec-driven",
+    "playwright"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "axcSkills.install",
+        "title": "Install Skills into Workspace",
+        "category": "AXC Skills"
+      },
+      {
+        "command": "axcSkills.update",
+        "title": "Update Installed Skills",
+        "category": "AXC Skills"
+      },
+      {
+        "command": "axcSkills.list",
+        "title": "Show Installed Skills",
+        "category": "AXC Skills"
+      }
+    ]
+  }
+}

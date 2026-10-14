@@ -1,0 +1,31 @@
+<!doctype html>
+<!-- ProtoFlow prototype shell — written once by /protoflow-prototype, then preserved.
+     Throwaway proof-of-understanding: seed data only, never a customer production database.
+     Serve over http (ES modules + WASM don't load from file://):  python serve.py -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__PRODUCT__</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">__PROJECT__</div>
+</header>
+<div class="layout">
+  <nav id="nav" aria-label="Screens"></nav>
+  <main id="main"><p class="muted">Loading the local database…</p></main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<button id="devTab" class="dev-tab" type="button" aria-expanded="false" aria-controls="devPanel" title="Review mode (press `)">⋯</button>
+<div id="devPanel" class="dev-panel" hidden>
+  <div class="dev-panel-title">__PROJECT__ <small>prototype · throwaway</small></div>
+  <label class="tog"><input type="checkbox" id="reviewToggle"> review mode — screen list + notes</label>
+  <label class="tog"><input type="checkbox" id="refsToggle"> show ids</label>
+  <div id="devExtra"></div>
+  <button class="btn ghost" id="resetBtn" title="Drop all data and reload the seed">reset data</button>
+</div>
+<script type="module" src="/router.js"></script>
+</body>
+</html>

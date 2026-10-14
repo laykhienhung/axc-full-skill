@@ -1,0 +1,20 @@
+# DERIVED by /protoflow-status — do not hand-edit
+# Machine twin of docs/INDEX.md. One entry per feature.
+project: <project>
+phase: grounding
+features: {}
+# Example once features exist:
+# features:
+#   booking:
+#     status: specced        # grounded|explored|specced|prototyped|confirmed|handed-off
+#     req: 8
+#     br: 5
+#     open_q: 2
+#     conflict: 1
+#     prototype: false
+#     handoff: blocked       # ready|blocked|—
+health:
+  conflicts: 0
+  open_questions: 0
+  confirmed_reqs: 0
+  total_reqs: 0
