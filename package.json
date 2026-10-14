@@ -5,6 +5,14 @@
   "author": {
     "name": "laykhienhung"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laykhienhung/axc-full-skill.git"
+  },
+  "homepage": "https://github.com/laykhienhung/axc-full-skill#readme",
+  "bugs": {
+    "url": "https://github.com/laykhienhung/axc-full-skill/issues"
+  },
   "type": "module",
   "scripts": {
     "build:plugin": "node scripts/build-plugin.mjs",

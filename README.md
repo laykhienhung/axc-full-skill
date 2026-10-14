@@ -13,7 +13,7 @@ Three ways — pick one per repo (installing two gives you duplicate skills).
 | Way | Command | Skills live in |
 |---|---|---|
 | npm / pnpm | `npx axc-full-skill init` | the repo's `.claude/` (commit it to share with the team) |
-| Claude Code plugin | `/plugin install axc-full-skill --marketplace <owner>/axc-full-skill` | Claude Code's plugin cache (per user) |
+| Claude Code plugin | `/plugin install axc-full-skill --marketplace laykhienhung/axc-full-skill` | Claude Code's plugin cache (per user) |
 | VS Code extension | **AXC Skills: Install Skills into Workspace** | the workspace's `.claude/` |
 
 ### Claude Code plugin
@@ -21,7 +21,7 @@ Three ways — pick one per repo (installing two gives you duplicate skills).
 Inside Claude Code (terminal or the VS Code extension):
 
 ```
-/plugin marketplace add <owner>/axc-full-skill
+/plugin marketplace add laykhienhung/axc-full-skill
 /plugin install axc-full-skill@axc-full-skill
 ```
 

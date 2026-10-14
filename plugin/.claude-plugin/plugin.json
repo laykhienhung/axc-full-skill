@@ -5,6 +5,8 @@
   "author": {
     "name": "laykhienhung"
   },
+  "homepage": "https://github.com/laykhienhung/axc-full-skill#readme",
+  "repository": "git+https://github.com/laykhienhung/axc-full-skill.git",
   "license": "MIT",
   "keywords": [
     "claude-code",
