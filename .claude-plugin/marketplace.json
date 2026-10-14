@@ -15,7 +15,7 @@
         "playwright",
         "e2e"
       ],
-      "version": "0.1.0",
+      "version": "0.1.1",
       "description": "Claude Code skills for the full delivery flow: ProtoFlow (BA discovery) → DevSpec (spec-driven build) → TestForge (Playwright E2E)"
     }
   ]

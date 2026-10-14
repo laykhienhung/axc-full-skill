@@ -8,6 +8,31 @@ ProtoFlow (BA discovery → spec + prototype)  →  DevSpec (spec-driven build) 
 
 ## Install
 
+Three ways — pick one per repo (installing two gives you duplicate skills).
+
+| Way | Command | Skills live in |
+|---|---|---|
+| npm / pnpm | `npx axc-full-skill init` | the repo's `.claude/` (commit it to share with the team) |
+| Claude Code plugin | `/plugin install axc-full-skill --marketplace <owner>/axc-full-skill` | Claude Code's plugin cache (per user) |
+| VS Code extension | **AXC Skills: Install Skills into Workspace** | the workspace's `.claude/` |
+
+### Claude Code plugin
+
+Inside Claude Code (terminal or the VS Code extension):
+
+```
+/plugin marketplace add <owner>/axc-full-skill
+/plugin install axc-full-skill@axc-full-skill
+```
+
+As a plugin, skills are namespaced, e.g. `/axc-full-skill:devspec-plan` (the bare `/devspec-plan` also works when nothing else uses that name). Update with `/plugin marketplace update axc-full-skill`.
+
+### VS Code extension
+
+Install **AXC Full Skill for Claude Code** from the Extensions view, then run **AXC Skills: Install Skills into Workspace** from the Command Palette.
+
+### npm / pnpm
+
 Run in the root of the repo you want the skills in:
 
 ```bash
@@ -65,7 +90,22 @@ The skills are plain files; some of them call tools you set up per repo:
 
 ## Releasing (maintainers)
 
+`.claude/` is the source. The plugin (`plugin/`) and the extension payload (`vscode/payload/`) are generated from it — never edit them by hand.
+
 ```bash
-npm version patch
-npm publish
+npm version patch          # bump the version
+npm run build              # regenerate plugin/ and vscode/payload/, sync versions
+npm publish                # npm
+git commit -am "release" && git push   # plugin marketplace (users get it on /plugin marketplace update)
+cd vscode && npx @vscode/vsce publish  # VS Code Marketplace
 ```
+
+| Path | What |
+|---|---|
+| `.claude/` | Skill source (npm payload) |
+| `lib/installer.mjs` | Install/update logic shared by the CLI and the extension |
+| `bin/cli.js` | npm CLI |
+| `.claude-plugin/marketplace.json` | Claude Code marketplace (this repo) |
+| `plugin/` | Generated Claude Code plugin — paths rewritten to `${CLAUDE_PLUGIN_ROOT}` |
+| `vscode/` | VS Code extension (`payload/` is generated) |
+| `scripts/` | `build-plugin.mjs`, `build-vscode.mjs` |
